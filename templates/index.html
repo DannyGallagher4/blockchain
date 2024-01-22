@@ -24,6 +24,22 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
+        #validationStatus {
+            font-size: 20px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        #validationStatus.invalid {
+            color: #e74c3c; /* Red color */
+        }
+
+        #checkMark {
+            color: #4CAF50; /* Green color */
+            margin-right: 10px;
+        }
+
         button {
             font-size: 24px;
             padding: 15px 30px;
@@ -58,6 +74,10 @@
         <button onclick="getChainClicked()">Get Chain</button>
         <button onclick="mineBlockClicked()">Mine Block</button>
         <button onclick="validateChainClicked()">Validate Chain</button>
+    </div>
+
+    <div id="validationStatus">
+        <span id="checkMark">✔️</span> Blockchain Valid
     </div>
 
 </body>
@@ -97,6 +117,19 @@
             .then(data => {
                 // Handle the response data as needed
                 console.log(data);
+
+                const validationStatus = document.getElementById('validationStatus');
+                const checkMark = document.getElementById('checkMark');
+
+                is_valid = data.valid;
+
+                if (is_valid) {
+                    validationStatus.classList.remove('invalid');
+                    checkMark.innerText = '✔️'; // Check mark
+                } else {
+                    validationStatus.classList.add('invalid');
+                    checkMark.innerText = '❌'; // Red X
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
