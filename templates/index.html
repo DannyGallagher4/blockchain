@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>DannyCoin</title>
+    
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        #blockContainer {
+            background-color: #f1f1f1;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            font-size: 24px;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            margin: 40px;
+            background-color: #3498db;
+            color: #ffffff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+    
+    
+</head>
+<body>
+
+    <div id="blockContainer">
+        <p><strong>Index:</strong> <span id="index"></span></p>
+        <p><strong>Timestamp:</strong> <span id="timestamp"></span></p>
+        <p><strong>Proof:</strong> <span id="proof"></span></p>
+        <p><strong>Transactions:</strong></p>
+        <ul id="transactions"></ul>
+        <p><strong>Previous Hash:</strong> <span id="previousHash"></span></p>
+    </div>
+    
+    <div>
+        <button onclick="getChainClicked()">Get Chain</button>
+        <button onclick="mineBlockClicked()">Mine Block</button>
+        <button onclick="validateChainClicked()">Validate Chain</button>
+    </div>
+
+</body>
+<script>
+    function getChainClicked() {
+        fetch('http://127.0.0.1:5001/get_chain')
+            .then(response => response.json())
+            .then(data => {
+                // Handle the response data as needed
+                console.log(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+    
+    function mineBlockClicked() {
+        fetch('http://127.0.0.1:5001/mine_block')
+            .then(response => response.json())
+            .then(data => {
+                // Handle the response data as needed
+                index = data.index;
+                timestamp = data.timestamp;
+                proof = data.proof;
+                transactions = data.transactions;
+                previousHash = data.previous_hash;
+                updateBlockData(index, timestamp, proof, transactions, previousHash)
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+    
+    function validateChainClicked() {
+        fetch('http://127.0.0.1:5001/confirm_chain')
+            .then(response => response.json())
+            .then(data => {
+                // Handle the response data as needed
+                console.log(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+    
+    function updateBlockData(index, timestamp, proof, transactions, previousHash) {
+        document.getElementById('index').innerText = index;
+        document.getElementById('timestamp').innerText = timestamp;
+        document.getElementById('proof').innerText = proof;
+        document.getElementById('transactions').innerHTML = transactions.map(transaction => {
+            return `<li><strong>Sender:</strong> ${transaction.sender}, <strong>Amount:</strong> ${transaction.amount}, <strong>Recipient:</strong> ${transaction.recipient}</li>`;
+        }).join('');
+        document.getElementById('previousHash').innerText = previousHash;
+    }
+    
+</script>
+</html>
