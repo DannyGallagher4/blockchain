@@ -34,4 +34,3 @@ MontyCoin is a simple implementation of a blockchain and cryptocurrency.
 10.** Reward System**: Implement a reward system for miners.
 
 ### Smart Contracts
->>>>>>> 2496eef8fa6156ba57cc45c9ae1811629f0b6aca
