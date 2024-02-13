@@ -12,6 +12,9 @@ class Blockchain:
     def __init__(self):
         self.chain = []
         self.transactions = []
+        self.transactions.append({'sender': "origin",
+                                    'receiver': "Danny",
+                                    'amount': 100000})
         self.create_block(proof=1, previous_hash='0')
         self.nodes = set()
 
@@ -62,11 +65,25 @@ class Blockchain:
         return True
 
     def add_transaction(self, sender, receiver, amount):
-        self.transactions.append({'sender': sender,
-                                  'receiver': receiver,
-                                  'amount': amount})
-        previous_block = self.get_previous_block()
-        return previous_block['index'] + 1
+        senderamt = 0
+        for block in self.chain:
+            curr_trans = block["transactions"]
+            for trans in curr_trans:
+                curr_send = trans["sender"]
+                curr_rec = trans["receiver"]
+                if curr_send == sender:
+                    senderamt -= trans["amount"]
+                elif curr_rec == sender:
+                    senderamt += trans["amount"]
+
+        if amount <= senderamt:
+            self.transactions.append({'sender': sender,
+                                    'receiver': receiver,
+                                    'amount': amount})
+            previous_block = self.get_previous_block()
+            return previous_block['index'] + 1
+        else:
+            return 0
 
     def add_node(self, address):
         parsed_url = urlparse(address)
@@ -74,14 +91,18 @@ class Blockchain:
 
     def replace_chain(self):
         network = self.nodes
+        print(network)
         longest_chain = None
         max_length = len(self.chain)
         for node in network:
             response = requests.get(f'http://{node}/get_chain')
+            print("first")
             if response.status_code == 200:
+                print("second")
                 length = response.json()['length']
                 chain = response.json()['chain']
                 if length > max_length and self.is_chain_valid(chain):
+                    print("third")
                     max_length = length
                     longest_chain = chain
         if longest_chain:
@@ -107,8 +128,8 @@ def mine_block():
     previous_proof = previous_block['proof']
     proof = blockchain.proof_of_work(previous_proof)
     previous_hash = blockchain.hash(previous_block)
-    blockchain.add_transaction(
-        sender=node_address, receiver='monty', amount=1)
+    #blockchain.add_transaction(
+     #   sender=node_address, receiver='monty', amount=1)
     block = blockchain.create_block(proof, previous_hash)
     response = {'message': 'Congratulations, you just mined a block!',
                 'index': block['index'],
@@ -148,7 +169,10 @@ def add_transaction():
         return 'Some elements of the transaction are missing', 400
     index = blockchain.add_transaction(
         json['sender'], json['receiver'], json['amount'])
-    response = {'message': f'This transaction will be added to Block {index}'}
+    if index != 0:
+        response = {'message': f'This transaction will be added to Block {index}'}
+    else:
+        response = {'message': 'insufficient funds'}
     return jsonify(response), 201
 
 
