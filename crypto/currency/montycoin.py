@@ -90,25 +90,30 @@ class Blockchain:
         self.nodes.add(parsed_url.netloc)
 
     def replace_chain(self):
-        network = self.nodes
+        network = list(self.nodes)
         print(network)
         longest_chain = self.chain
         max_length = len(self.chain)
         long_is_unique = True
+        port = request.host
+        network.remove(str(port))
         for node in network:
             response = requests.get(f'http://{node}/get_chain')
             if response.status_code == 200:
                 length = response.json()['length']
                 chain = response.json()['chain']
                 if length > max_length and self.is_chain_valid(chain):
+                    print(f"length>max on {node}")
                     max_length = length
                     longest_chain = chain
                     long_is_unique = True
                 elif length == max_length:
                     if self.chain == chain:
+                        print(f"are equal on {node}")
                         long_is_unique = False
         if longest_chain != self.chain and long_is_unique:
             self.chain = longest_chain
+        print("LONGISUNIQUE: " + str(long_is_unique))
         if long_is_unique:
             return True
         return False
@@ -189,15 +194,10 @@ def connect_node():
         return "No node", 400
     for node in nodes:
         blockchain.add_node(node)
-    print(nodes)
     nodes_new = nodes.copy()
-    print(nodes_new)
     nodes_new.remove("http://"+str(port))
-    print(nodes_new)
     for n in nodes_new:
-        print(f'{n}/connect_node_secret' + "/n" + str({"nodes": nodes}))
         response = requests.post(f'{n}/connect_node_secret', json={"nodes": nodes})
-        print(response)
     response = {'message': 'All the nodes are now connected. The Montycoin Blockchain now contains the following nodes:',
                 'total_nodes': list(blockchain.nodes)}
     return jsonify(response), 201
@@ -206,17 +206,12 @@ def connect_node():
 @app.route('/connect_node_secret', methods=['POST'])
 def connect_node_secret():
     json = request.get_json()
-    print(json)
     nodes = json.get('nodes')
     port = request.host
-    print("hello")
     if nodes is None:
-        print("sup")
         return "No node", 400
     for node in nodes:
-        print(f"connect_secret on {node}")
         blockchain.add_node(node)
-    print("bye")
     response = {'message': 'All the nodes are now connected. The Montycoin Blockchain now contains the following nodes:',
                 'total_nodes': list(blockchain.nodes)}
     return jsonify(response), 201

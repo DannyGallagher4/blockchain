@@ -1,0 +1,7 @@
+I have made 3 main changes to the original code, making sure transactions are viable, making connect node connect all of the nodes in the network to each other, and making it so that when replace_chain is called, if there is a new longest chain, it gets propogated throughout the network. 
+
+The first thing I did was add a transaction validator. For this, I made it so that whenever a transaction happens, it runs through all of the blocks in the blockchain and makes sure that the user sending the money has enough balance. This way is quite inefficient, especially when the blockchain gets very long, but it was something simple I did to get started.
+
+The next thing I did was change connect_nodes so that when it is called, it also makes sure every copy of the blockchain from every port also gets the nodes connected. I added a new endpoint, connect_node_secret, that gets called to the three other ports when connect_nodes is called from the fourth port. This makes it so that one only needs to call connect_nodes once as opposed to four times.
+
+The final thing I did was make it so when replace_chain is pinged, if there is a longest unique chain, it will propogate that "good" chain throughout the whole network. If there are 2 different chains of the same length or all of the chains are the same, nothing happens and it waits until replace_chain is pinged again to see if there is a dominant chain at that point. This makes it so that replace_chain only needs to be called once as opposed to on every single node. 
