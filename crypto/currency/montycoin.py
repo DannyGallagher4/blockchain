@@ -92,8 +92,9 @@ class Blockchain:
     def replace_chain(self):
         network = self.nodes
         print(network)
-        longest_chain = None
+        longest_chain = self.chain
         max_length = len(self.chain)
+        long_is_unique = True
         for node in network:
             response = requests.get(f'http://{node}/get_chain')
             if response.status_code == 200:
@@ -102,8 +103,13 @@ class Blockchain:
                 if length > max_length and self.is_chain_valid(chain):
                     max_length = length
                     longest_chain = chain
-        if longest_chain:
+                    long_is_unique = True
+                elif length == max_length:
+                    if self.chain == chain:
+                        long_is_unique = False
+        if longest_chain != self.chain and long_is_unique:
             self.chain = longest_chain
+        if long_is_unique:
             return True
         return False
 
@@ -184,7 +190,6 @@ def connect_node():
     for node in nodes:
         blockchain.add_node(node)
     print(nodes)
-    #TODO change this so it saves a copy of the list
     nodes_new = nodes.copy()
     print(nodes_new)
     nodes_new.remove("http://"+str(port))
@@ -201,6 +206,7 @@ def connect_node():
 @app.route('/connect_node_secret', methods=['POST'])
 def connect_node_secret():
     json = request.get_json()
+    print(json)
     nodes = json.get('nodes')
     port = request.host
     print("hello")
@@ -208,7 +214,7 @@ def connect_node_secret():
         print("sup")
         return "No node", 400
     for node in nodes:
-        print(f"connect_secret on {port}")
+        print(f"connect_secret on {node}")
         blockchain.add_node(node)
     print("bye")
     response = {'message': 'All the nodes are now connected. The Montycoin Blockchain now contains the following nodes:',
@@ -220,11 +226,25 @@ def connect_node_secret():
 def replace_chain():
     is_chain_replaced = blockchain.replace_chain()
     if is_chain_replaced:
-        response = {'message': 'The nodes had different chains so the chain was replaced by the longest one.',
+        nodes = blockchain.nodes
+        print("THE NODES ARE: " + str(nodes))
+        port = request.host
+        nodes.remove(str(port))
+        for n in nodes:
+            resp = requests.post(f'http://{n}/prop_chain', json={"chain": blockchain.chain})
+        response = {'message': 'Propogated correct chain',
                     'new_chain': blockchain.chain}
     else:
-        response = {'message': 'All good. The chain is the largest one.',
-                    'actual_chain': blockchain.chain}
+        response = {'message': 'Chain still working',
+                    'chain': blockchain.chain}
+    return jsonify(response), 200
+
+@app.route('/prop_chain', methods=['POST'])
+def prop_chain():
+    json = request.get_json()
+    chain = json.get("chain")
+    blockchain.chain = chain
+    response = {"message": "Done!"}
     return jsonify(response), 200
 
 
