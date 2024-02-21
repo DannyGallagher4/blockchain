@@ -96,13 +96,10 @@ class Blockchain:
         max_length = len(self.chain)
         for node in network:
             response = requests.get(f'http://{node}/get_chain')
-            print("first")
             if response.status_code == 200:
-                print("second")
                 length = response.json()['length']
                 chain = response.json()['chain']
                 if length > max_length and self.is_chain_valid(chain):
-                    print("third")
                     max_length = length
                     longest_chain = chain
         if longest_chain:
@@ -181,14 +178,42 @@ def add_transaction():
 def connect_node():
     json = request.get_json()
     nodes = json.get('nodes')
+    port = request.host
     if nodes is None:
         return "No node", 400
     for node in nodes:
         blockchain.add_node(node)
+    print(nodes)
+    #TODO change this so it saves a copy of the list
+    nodes_new = nodes.copy()
+    print(nodes_new)
+    nodes_new.remove("http://"+str(port))
+    print(nodes_new)
+    for n in nodes_new:
+        print(f'{n}/connect_node_secret' + "/n" + str({"nodes": nodes}))
+        response = requests.post(f'{n}/connect_node_secret', json={"nodes": nodes})
+        print(response)
     response = {'message': 'All the nodes are now connected. The Montycoin Blockchain now contains the following nodes:',
                 'total_nodes': list(blockchain.nodes)}
     return jsonify(response), 201
 
+
+@app.route('/connect_node_secret', methods=['POST'])
+def connect_node_secret():
+    json = request.get_json()
+    nodes = json.get('nodes')
+    port = request.host
+    print("hello")
+    if nodes is None:
+        print("sup")
+        return "No node", 400
+    for node in nodes:
+        print(f"connect_secret on {port}")
+        blockchain.add_node(node)
+    print("bye")
+    response = {'message': 'All the nodes are now connected. The Montycoin Blockchain now contains the following nodes:',
+                'total_nodes': list(blockchain.nodes)}
+    return jsonify(response), 201
 
 @app.route('/replace_chain', methods=['GET'])
 # Replacing the chain by the longest chain if needed
