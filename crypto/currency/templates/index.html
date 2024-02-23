@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>DannyCoin</title>
+    
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        #blockContainer {
+            background-color: #f1f1f1;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            font-size: 20px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            margin: 20px;
+            background-color: #3498db;
+            color: #ffffff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        #dropDown {
+            margin: 30px;
+        }
+    </style>
+    
+    
+</head>
+<body>
+
+    <div id="dropDown">
+        <h3>Select a node</h3>
+        <form>
+            <select name="numbers" id="numbers" onchange="redirectToNode()">
+                <option value="http://127.0.0.1:5000">5000</option>
+                <option value="http://127.0.0.1:5001">5001</option>
+                <option value="http://127.0.0.1:5002">5002</option>
+                <option value="http://127.0.0.1:5003">5003</option>
+            </select>
+        </form>
+    </div>
+
+    <div id="blockContainer">
+        <p><strong>Index:</strong> <span id="index"></span></p>
+        <p><strong>Timestamp:</strong> <span id="timestamp"></span></p>
+        <p><strong>Proof:</strong> <span id="proof"></span></p>
+        <p><strong>Transactions:</strong></p>
+        <ul id="transactions"></ul>
+        <p><strong>Previous Hash:</strong> <span id="previousHash"></span></p>
+    </div>
+    
+    <div>
+        <button onclick="getChainClicked()">Get Chain</button>
+        <button onclick="mineBlockClicked()">Mine Block</button>
+        <button onclick="validateChainClicked()">Validate Chain</button>
+        <button onclick="replaceClicked()">Replace Chain</button>
+        <button onclick="connectClicked()">Connect Nodes</button>
+    </div>
+
+    <form id="transactionForm">
+        <label for="sender">Sender:</label>
+        <input type="text" id="sender" name="sender"><br><br>
+        <label for="receiver">Receiver:</label>
+        <input type="text" id="receiver" name="receiver"><br><br>
+        <label for="amount">Amount:</label>
+        <input type="number" id="amount" name="amount"><br><br>
+        <button type="button" onclick="addTransaction()">Add Transaction</button>
+    </form>
+
+</body>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var currentNode = window.location.href;
+        var selectElement = document.getElementById('numbers');
+
+        var parsedUrl = new URL(currentNode);
+
+        // Get just the port number
+        var port = parsedUrl.port.toString().slice(-1);
+
+        selectElement.options[port].selected = true;
+    });
+
+    function redirectToNode() {
+        var selectedNode = document.getElementById("numbers").value;
+        if (selectedNode) {
+            window.location.href = selectedNode;
+        }
+    }
+
+    function getChainClicked() {
+        var dropdown = document.getElementById("numbers");
+        var selectedValue = dropdown.value;
+
+        fetch(`${selectedValue}/get_chain`)
+            .then(response => response.json())
+            .then(data => {
+                // Handle the response data as needed
+                console.log(data)
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+    
+    function mineBlockClicked() {
+        var dropdown = document.getElementById("numbers");
+        var selectedValue = dropdown.value;
+
+        fetch(`${selectedValue}/mine_block`)
+            .then(response => response.json())
+            .then(data => {
+                // Handle the response data as needed
+                index = data.index;
+                timestamp = data.timestamp;
+                proof = data.proof;
+                transactions = data.transactions;
+                previousHash = data.previous_hash;
+                updateBlockData(index, timestamp, proof, transactions, previousHash)
+            })
+            .catch(error => {
+                console.error('Error:', error);
+        });
+    }
+    
+    function validateChainClicked() {
+        var dropdown = document.getElementById("numbers");
+        var selectedValue = dropdown.value;
+
+        fetch(`${selectedValue}/confirm_chain`)
+            .then(response => response.json())
+            .then(data => {
+                // Handle the response data as needed
+                console.log(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+        });
+    }
+    
+    function updateBlockData(index, timestamp, proof, transactions, previousHash) {
+        document.getElementById('index').innerText = index;
+        document.getElementById('timestamp').innerText = timestamp;
+        document.getElementById('proof').innerText = proof;
+        document.getElementById('transactions').innerHTML = transactions.map(transaction => {
+            return `<li><strong>Sender:</strong> ${transaction.sender}, <strong>Amount:</strong> ${transaction.amount}, <strong>Recipient:</strong> ${transaction.receiver}</li>`;
+        }).join('');
+        document.getElementById('previousHash').innerText = previousHash;
+    }
+
+    function replaceClicked(){
+        var dropdown = document.getElementById("numbers");
+        var selectedValue = dropdown.value;
+
+        fetch(`${selectedValue}/replace_chain`)
+            .then(response => response.json())
+            .then(data => {
+                // Handle the response data as needed
+                console.log(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+        });
+    }
+
+    function connectClicked(){
+        var dropdown = document.getElementById("numbers");
+        var selectedValue = dropdown.value;
+
+        fetch(`${selectedValue}/connect_node`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                // Add your JSON data here
+                nodes: [
+                        "http://127.0.0.1:5000",
+                        "http://127.0.0.1:5001",
+                        "http://127.0.0.1:5002",
+                        "http://127.0.0.1:5003"
+                        ]
+            })})
+            .then(response => response.json())
+            .then(data => {
+                // Handle the response data as needed
+                console.log(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+        });
+    }
+
+    function addTransaction() {
+        var form = document.getElementById("transactionForm");
+        var sender = form.elements["sender"].value;
+        var receiver = form.elements["receiver"].value;
+        var amount = form.elements["amount"].value;
+
+        var dropdown = document.getElementById("numbers");
+        var selectedValue = dropdown.value;
+
+        fetch(`${selectedValue}/add_transaction`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                sender: sender,
+                receiver: receiver,
+                amount: parseInt(amount)
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data); // Display the response message
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    
+</script>
+</html>

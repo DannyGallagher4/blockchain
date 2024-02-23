@@ -1,7 +1,7 @@
 import datetime
 import hashlib
 import json
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 import requests
 from uuid import uuid4
 from urllib.parse import urlparse
@@ -128,6 +128,9 @@ node_address = str(uuid4()).replace('-', '')
 # Creating a Blockchain
 blockchain = Blockchain()
 
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    return render_template('index.html')
 
 @app.route('/mine_block', methods=['GET'])
 # Mining a new block
